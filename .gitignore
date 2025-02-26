@@ -1,0 +1,7 @@
+# Ignore .idea folder (used by some IDEs, like PyCharm)
+.idea/
+Data/
+
+# Ignore Python cache files and folders
+__pycache__/
+*.pyc
