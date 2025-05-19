@@ -77,6 +77,17 @@ For the experimental analyses [UCR Time Series Datasets](https://www.cs.ucr.edu/
 
 Dataset folders should be placed under UCR_DATASETS folder as the example of SyntheticControl.
 
+
+## AutoKC capabilities
+
+This repository contains the AutoKC algorithm, which is a clustering algorithm that can automatically determine the number of clusters in a dataset for partition-clustering methods:
+
+![AutoKC](/images/AutoKC.png)
+
+Example of AutoKC on baguette-shaped clusters (source: Examples/Baguette_shape_clustering/check_autoKC_clustering.py):
+![AutoKC](/images/AutoKC_baguette.png)
+
+
 ## Acknowledgment
 
 ### Repositories:

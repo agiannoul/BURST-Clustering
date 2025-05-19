@@ -4,13 +4,10 @@ import numpy as np
 from numpy.linalg import norm, eigh
 from numpy.fft import fft, ifft
 import numpy
-#from tslearn.clustering import KShape
 from kshape.core import KShapeClusteringCPU
-from tslearn.clustering import KShape
 
 from tslearn.metrics import y_shifted_sbd_vec
-from tslearn.utils import to_time_series_dataset, to_time_series
-import stumpy
+
 
 
 class BURSTK_Clustering:

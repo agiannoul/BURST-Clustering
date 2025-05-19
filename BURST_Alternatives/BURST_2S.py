@@ -4,16 +4,11 @@ import numpy as np
 from numpy.linalg import norm, eigh
 from numpy.fft import fft, ifft
 import numpy
-#from tslearn.clustering import KShape
 from kshape.core import KShapeClusteringCPU
-from tslearn.clustering import KShape
-2
 from tslearn.metrics import y_shifted_sbd_vec
-from tslearn.utils import to_time_series_dataset, to_time_series
-import stumpy
 
 
-class BURST_Clustering:
+class BURST_Clustering_2S:
     def __init__(self,init_len,alpha=0.3):
         self.model =None
         self.merge_clust =2
@@ -668,20 +663,7 @@ class BURST_inner():
             merge_dists.append(merge_distance)
         if len(merge_dists) > 2:
 
-            limit = statistics.median(merge_dists) + self.merge_clust * statistics.stdev(merge_dists)
-            old_limit=0
-            temp_dists=[ddd for ddd in merge_dists]
-            while old_limit!=limit:
-                temp_dists=[ddd for ddd in temp_dists if ddd<limit]
-                old_limit=limit
-                limit=statistics.mean(temp_dists) + self.merge_clust * statistics.stdev(temp_dists)
-                if self.verbose:
-                    print(f"    {temp_dists}")
-                    print(f"    merge mean: {statistics.mean(temp_dists) }")
-                    print(f"    merge stdev: {statistics.stdev(temp_dists) }")
-                    print(f"    merge std*factor: {self.merge_clust *  statistics.stdev(temp_dists) }")
-                    print(f"    limit mean {statistics.mean(temp_dists) + self.merge_clust * statistics.stdev(temp_dists)}")
-                    print(f"    -------------------")
+            limit = statistics.mean(merge_dists) + self.merge_clust * statistics.stdev(merge_dists)
             for i, md in enumerate(merge_dists):
                 if limit < md:
                     if self.verbose:

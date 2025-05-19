@@ -4,16 +4,11 @@ import numpy as np
 from numpy.linalg import norm, eigh
 from numpy.fft import fft, ifft
 import numpy
-#from tslearn.clustering import KShape
 from kshape.core import KShapeClusteringCPU
-from tslearn.clustering import KShape
-2
 from tslearn.metrics import y_shifted_sbd_vec
-from tslearn.utils import to_time_series_dataset, to_time_series
-import stumpy
 
 
-class BURST_Clustering:
+class BURST_Clustering_NaiveMerge:
     def __init__(self,init_len,alpha=0.3):
         self.model =None
         self.merge_clust =2
@@ -235,7 +230,7 @@ class BURST_inner():
                 if self.verbose:
                     print(f"mindist: {min_dist} , new_clusters_dist {self.new_clusters_dist[tmp_index]} ({tmp_index})")
 
-                if min_dist < self.merge_existing*self.new_clusters_dist[tmp_index]:
+                if min_dist < self.merge_existing*self.new_clusters_dist[tmp_index] and False:
                     to_add[tmp_index].append((cluster, cluster_subseq))
                     if self.verbose:
                         print(f"Cluster {ci} is merged with old cluster {tmp_index}")

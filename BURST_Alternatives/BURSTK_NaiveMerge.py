@@ -4,70 +4,44 @@ import numpy as np
 from numpy.linalg import norm, eigh
 from numpy.fft import fft, ifft
 import numpy
-#from tslearn.clustering import KShape
 from kshape.core import KShapeClusteringCPU
-from tslearn.clustering import KShape
-2
 from tslearn.metrics import y_shifted_sbd_vec
-from tslearn.utils import to_time_series_dataset, to_time_series
-import stumpy
 
 
-class BURST_Clustering:
-    def __init__(self,init_len,alpha=0.3):
+class BURSTK_Clustering_NaiveMerge:
+    def __init__(self,init_len,k,alpha):
         self.model =None
-        self.merge_clust =2
-        self.merge_existing=1
-        self.alpha=alpha
         self.init_len =init_len
+        self.k = k
+        self.alpha = alpha
     def fit(self,X,y):
         series_len=X.shape[1]
-        self.model = BURST_inner(pattern_length=series_len, subsequence_length=series_len,
+        self.model = BURSTK_inner(pattern_length=series_len, subsequence_length=series_len,
                           init_length=self.init_len * series_len,alpha=self.alpha,
                           batch_size=self.init_len * series_len, overlaping_rate=series_len,
-                          merge_clust=self.merge_clust,merge_existing=self.merge_existing,
+                          merge_clust=-1,merge_existing=1,k=self.k,
                           to_plot=False,verbose=False)
-        for row in X:
+        for row in X:  # -230]:
             res = self.model.feed_data([v for v in row])
             #print(res)
     def predict(self, X):
         predicts=[]
         for row in X:  # -230]:
             res = self.model.feed_data([v for v in row])
-            clustername=self.model.calculate_real_time_cluster(np.array([v for v in row]))
+            clustername = self.model.calculate_real_time_cluster(np.array([v for v in row]))
             predicts.append(clustername)
         return predicts
     def get_parameters(self):
         return {
             "window":self.init_len,
+            "k":self.k,
         }
 
-class BURST_inner():
-    """
-    This class is built based on SAND implementation tion from TSB repository: https://github.com/TheDatumOrg/TSB-UAD
-
-
-    Online and offline method that use a set of weighted subsequences (Theta) to identify anomalies.
-    The anomalies are identified by computing the distance of a given subsequence (the targeted
-    subsequence to analyze) to Theta
-    ----------
-    subsequence_length : int : subsequence length to analyze
-    pattern_length : int (greater than pattern length): length of the subsequences in Theta
-    k : int (greater than 1) : number of subsequences in Theta
-
-    online : Boolean, Compute the analysis online or offline
-    - Online: run per batch the model update and the computation of the score
-    (requires the set alpha, init_length, and batch_size)
-    - Offline: run the model for one unique batch
-
-    alpha : float ([0,1]) : update rate (used in Online mode only)
-    init_length : int (greater than subsequence_length) : length of the initial batch (used in Online mode only)
-    batch_size : int (greater than subsequence_length) : length of the batches (used in Online mode only)
-    """
+class BURSTK_inner():
 
     def __init__(self, pattern_length, subsequence_length, k=20, alpha=0.3, init_length=None,
                  batch_size=None, overlaping_rate=10, merge_clust=4,
-                 merge_existing=1,to_plot=True, verbose=True,calculate_anomalies_=False):
+                 merge_existing=1,to_plot=True, verbose=True):
 
         self.to_plot = to_plot
         self.verbose = verbose
@@ -99,22 +73,6 @@ class BURST_inner():
         self.cluster_assign = {}
         self.cluster_count = 0
 
-        self.calculate_anomalies_=calculate_anomalies_
-    """
-    Build the model and compute the anoamly score
-    ----------
-    X : np.array or List, the time series to analyse
-
-    online : Boolean, Compute the analysis online or offline
-    - Online: run per batch the model update and the computation of the score
-    (requires the set alpha, init_length, and batch_size)
-    - Offline: run the model for one unique batch
-
-    alpha : float ([0,1]) : update rate (used in Online mode only)
-    init_length : int (greater than subsequence_length) : length of the initial batch (used in Online mode only)
-    batch_size : int (greater than subsequence_length) : length of the batches (used in Online mode only)
-    overlapping rate (smaller than len(X)//2 and batch_size//2) : Number points seperating subsequences in the time series.
-    """
 
     def feed_data(self, X):
         to_return = {}
@@ -123,7 +81,6 @@ class BURST_inner():
         to_return["scores"] = []
         to_return["Batch_scores"] = []
 
-        temp_decision_scores = []
         self.ts.extend(X)
         # print(len(self.ts))
         if len(self.ts) >= self.init_length and self.start == False:
@@ -135,6 +92,7 @@ class BURST_inner():
 
             self._run(self.ts[:min(len(self.ts), self.current_time)])  # update weights
             self.start = True
+
             self.keeplast = self.ts[-self.pattern_length - self.subsequence_length:]
             self.ts = self.ts[self.current_time:]
             self.cluster_count = 0
@@ -152,11 +110,13 @@ class BURST_inner():
 
             self.delete_clusters()  # delete clusters with small weight
 
+
             self.cluster_count = 0
             self.keeplast = self.ts[-self.pattern_length - self.subsequence_length:]
             self.ts = self.ts[self.batch_size:]
 
             return to_return
+
         return to_return
 
     def calculate_real_time_cluster(self, time_series):
@@ -169,7 +129,6 @@ class BURST_inner():
 
         return self.cluster_names[belonged_cluster]
 
-    # Computation of the anomaly score
     def _run(self, ts):
         all_join = []
         all_activated_weighted = []
@@ -180,13 +139,20 @@ class BURST_inner():
                                                                  self.nm_current_weight, self.time_decay):
             new_w = float(scores_sub_join) / float(1 + max(0, t_decay - self.batch_size))
             update_w = float(1 - self.alpha) * float(scores_sub_join_old) + float(self.alpha) * float(new_w)
+
             all_activated_weighted.append(update_w)
+
 
         self.nm_current_weight = all_activated_weighted
 
-
         return
 
+    # MAIN METHODS:
+    # - Initialization
+    # - Theta update for next batch
+    # - Score computaiton
+
+    # Initialization of the model
     def _initialize(self):
         cluster_subseqs, clusters = self._kshape_subsequence(initialization=True)
         self.cluster_subseqs = cluster_subseqs
@@ -235,7 +201,7 @@ class BURST_inner():
                 if self.verbose:
                     print(f"mindist: {min_dist} , new_clusters_dist {self.new_clusters_dist[tmp_index]} ({tmp_index})")
 
-                if min_dist < self.merge_existing*self.new_clusters_dist[tmp_index]:
+                if min_dist < self.merge_existing*self.new_clusters_dist[tmp_index] and False:
                     to_add[tmp_index].append((cluster, cluster_subseq))
                     if self.verbose:
                         print(f"Cluster {ci} is merged with old cluster {tmp_index}")
@@ -450,9 +416,9 @@ class BURST_inner():
     # Setting in memory the matrix S
     def _set_initial_S(self, X, idx, cluster_centers):
         # X = to_time_series_dataset(X)
-        X = np.array(X)
+        X=np.array(X)
         X = np.expand_dims(X, axis=-1)
-        # cluster_centers = to_time_series(cluster_centers)
+        #cluster_centers = to_time_series(cluster_centers)
         cluster_centers = np.array(cluster_centers)
         cluster_centers = np.expand_dims(cluster_centers, axis=-1)
         sz = X.shape[1]
@@ -535,19 +501,19 @@ class BURST_inner():
 
     def apply_advance_kshape(self, all_subsequences, idxs):
 
-        ks = KShapeClusteringCPU(self.k, centroid_init='random', max_iter=20, n_jobs=1)
+        ks = KShapeClusteringCPU(self.k, centroid_init='random', max_iter=100, n_jobs=1)
         X = np.array(all_subsequences)
         X=X.reshape(X.shape[0], X.shape[1], 1)
         ks.fit(X)
         list_label = ks.predict(X)
+        cluster_centers=ks.centroids_
+        cluster_centers = cluster_centers.reshape(cluster_centers.shape[0], cluster_centers.shape[1])
 
-        cluster_centers = ks.centroids_
-        cluster_centers=cluster_centers.reshape(cluster_centers.shape[0],cluster_centers.shape[1])
+
         # # old Kshape
         # ks = KShape(n_clusters=self.k, verbose=False)
         # list_label = ks.fit_predict(np.array(all_subsequences))
-        #
-        # cluster_centers = ks.cluster_centers_
+        #cluster_centers = ks.cluster_centers_
 
 
         cluster_centers = cluster_centers.reshape(-1, cluster_centers.shape[1])
@@ -568,14 +534,10 @@ class BURST_inner():
         cluster_centers = non_empty_centers
         cluster_subseq = non_empty_cluster_subseq_s
 
-        # all_mean_dist = []
-        # for i, (cluster, cluster_subseq_s) in enumerate(zip(cluster_centers, cluster_subseq)):
-        #     if len(cluster_subseq_s) == 0:
-        #         all_mean_dist.append(0)
-        #     else:
-        #         all_mean_dist.append(self._compute_mean_dist_subs(cluster, cluster_subseq_s))
-
-        tomerge = self.my_complete_clustering(cluster_centers)
+        if self.merge_clust<=0:
+            tomerge = [[i] for i in range(len(cluster_centers))]
+        else:
+            tomerge = self.my_complete_clustering(cluster_centers)
 
         # self._extract_shape_stream(all_sub_to_add, i, cur_c[0], initial=False)
         final_cluster_subs = []

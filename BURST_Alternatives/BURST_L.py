@@ -4,16 +4,11 @@ import numpy as np
 from numpy.linalg import norm, eigh
 from numpy.fft import fft, ifft
 import numpy
-#from tslearn.clustering import KShape
 from kshape.core import KShapeClusteringCPU
-from tslearn.clustering import KShape
-2
 from tslearn.metrics import y_shifted_sbd_vec
-from tslearn.utils import to_time_series_dataset, to_time_series
-import stumpy
 
 
-class BURST_Clustering:
+class BURST_Clustering_L:
     def __init__(self,init_len,alpha=0.3):
         self.model =None
         self.merge_clust =2
@@ -692,12 +687,12 @@ class BURST_inner():
         return clusters_copy[-1]
 
     def full_dist_between_clusters(self, all_dist, cluster1_ind, cluster2_ind):
-        # maxd=np.inf
-        maxd = 0
+        maxd = np.inf
+        # maxd = 0
         for ind1 in cluster1_ind:
             for ind2 in cluster2_ind:
-                # if all_dist[ind2][ind1] < maxd:
-                if all_dist[ind2][ind1] > maxd:
+                if all_dist[ind2][ind1] < maxd:
+                    # if all_dist[ind2][ind1] > maxd:
                     maxd = all_dist[ind2][ind1]
         return maxd
 
