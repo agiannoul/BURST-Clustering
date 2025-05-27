@@ -17,7 +17,7 @@ Figure: Shillouette scores for UCR datasets using Euclidean and SBD distances:
 ## BURST strategy performance
 
 Below figure shows the performance of $k$-medoids and $k$-means variants 
-with BURST ($B\_$), compared to $AC$ methods, using both box plots and 
+with BURST (B_), compared to $AC$ methods, using both box plots and 
 critical diagrams.  The results highlight the superiority of the BURST 
 framework  over traditional methods, except in the case of the Birch 
 algorithm for the purity metric, as already discussed. Specifically, 
