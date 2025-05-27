@@ -87,7 +87,7 @@ This repository contains the AutoKC algorithm, which is a clustering algorithm t
 Example of AutoKC on baguette-shaped clusters (source: Examples/Baguette_shape_clustering/check_autoKC_clustering.py):
 ![AutoKC](/images/AutoKC_baguette.png)
 
-
+[Redirect here for BURST effectiveness evaluation plots.](plots_and_results/README.md)
 ## Acknowledgment
 
 ### Repositories:

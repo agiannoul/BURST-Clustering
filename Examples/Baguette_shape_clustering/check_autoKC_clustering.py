@@ -1,3 +1,5 @@
+import random
+
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn import cluster, datasets, mixture
@@ -27,7 +29,7 @@ def perform_clustering(model,distance_matrix,full_dist_between_clusters,combine_
                                                                   jaccard_dist,
                                                                   #merge_clust=2.5,
                                                                   merge_clust=merge_clust,
-                                                                  verbose=False)
+                                                                  verbose=True)
     return final_labels,distance_matrix,centers
 
 
@@ -41,29 +43,56 @@ def apply_clustering(model,data,raw_data,full_dist_between_clusters,ax,merge_clu
     print(len(set(final_labels)))
     ax.scatter(raw_data[:, 0], raw_data[:, 1], c=final_labels, cmap='viridis', s=50)
 
+def baguette():
+    random.seed(42)
+    # Parameters for the clusters
+    n_samples = 100  # Number of samples per cluster
+    length = 30  # Length of the baguette
+    width = 0.5  # Width of the baguette (noise level)
+    distance = 4  # Distance between the centroids of the two clusters
 
+    # Generate the first baguette-shaped cluster
+    x1 = np.linspace(0, length, n_samples)
+    y1 = [random.random()*width+length/2 for i in x1]
+    cluster1 = np.column_stack((x1, y1))
 
-noisy_moons = datasets.make_moons(n_samples=200, noise=0.05, random_state=42)
+    # Generate the second baguette-shaped cluster
+    x2 = np.linspace(0, length, n_samples)
+    y2 = [random.random()*width+distance+length/2 for i in x2]
+    cluster2 = np.column_stack((x2, y2))
 
-fig, ax = plt.subplots(2, 4, figsize=(12, 6))
+    # Combine the clusters
+    data = np.vstack((cluster1, cluster2))
+    return data
+# Anisotropicly distributed data
+X=baguette()
+noisy_moons = (X, X)
 
-kmeans_model=Kmeans(2)
-labels = kmeans_model.fit(noisy_moons[0], None)
+fig, ax = plt.subplots(2, 3, figsize=(12, 6))
 
+kmdeoids=KMedoids(2)
+DM=calcualte_Distance_Matrix(noisy_moons[0],euclidean)
+
+labels = kmdeoids.fit(DM, None)
 ax[0][0].set_title('k=2')
 ax[0][1].set_title('AutoKC with \n complete linkage (default)')
 ax[0][2].set_title('AutoKC with single \n linkage and (1.8T)')
-ax[0][3].set_title('AutoKC with single \n linkage and (2T)')
 
-
+ax[0][0].set_ylim(-1,32)
+ax[0][0].set_xlim(-1,32)
+ax[0][1].set_ylim(-1,32)
+ax[0][1].set_xlim(-1,32)
+ax[0][2].set_ylim(-1,32)
+ax[0][2].set_xlim(-1,32)
 
 
 ax[0][0].scatter(noisy_moons[0][:, 0], noisy_moons[0][:, 1], c=labels, cmap='viridis', s=50)
 apply_clustering(Kmeans,noisy_moons[0],noisy_moons[0],full_dist_between_clusters,ax[0][1],merge_clust=2)
 apply_clustering(Kmeans,noisy_moons[0],noisy_moons[0],full_min_dist_between_clusters,ax[0][2])
-apply_clustering(Kmeans,noisy_moons[0],noisy_moons[0],full_min_dist_between_clusters,ax[0][3],merge_clust=2)
 
+####################################################33
 
+noisy_moons = datasets.make_moons(n_samples=200, noise=0.05, random_state=42)
 kmdeoids=KMedoids(2)
 DM=calcualte_Distance_Matrix(noisy_moons[0],euclidean)
 labels = kmdeoids.fit(DM, None)
@@ -73,9 +102,7 @@ ax[1][0].scatter(noisy_moons[0][:, 0], noisy_moons[0][:, 1], c=labels, cmap='vir
 apply_clustering(KMedoids,DM,noisy_moons[0],full_dist_between_clusters,ax[1][1],merge_clust=2)
 
 apply_clustering(KMedoids,DM,noisy_moons[0],full_min_dist_between_clusters,ax[1][2])
-apply_clustering(KMedoids,DM,noisy_moons[0],full_min_dist_between_clusters,ax[1][3],merge_clust=2)
 
-fig.text(0.05, 0.65, "KMeans", ha="center",fontsize=12,rotation=90)
-fig.text(0.05, 0.25, "KMedoids", ha="center",fontsize=12,rotation=90)
+fig.text(0.05, 0.45, "KMedoids", ha="center",fontsize=12,rotation=90)
 
 plt.show()
